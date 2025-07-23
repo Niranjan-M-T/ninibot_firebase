@@ -1,6 +1,7 @@
 import time
 import os
 import google.generativeai as genai
+from google.generativeai import types
 from config import GEMINI_API_KEY
 
 # Configure your API key
