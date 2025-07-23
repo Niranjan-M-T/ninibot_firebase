@@ -16,7 +16,7 @@ def upload_to_publer(video_path="output/video.mp4", description=""):
 
         response = client.posts.create(
             platform="instagram",
-            account_id="YOUR_INSTAGRAM_ACCOUNT_ID",  # Replace with your Instagram account ID in Publer
+            account_id="72165006158",  # Replace with your Instagram account ID in Publer
             media_urls=[video_data],
             post_type="reels",
             description=description,
