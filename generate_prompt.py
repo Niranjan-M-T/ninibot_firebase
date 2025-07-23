@@ -10,7 +10,7 @@ def generate_prompt():
     Generates a creative and realistic 10-second food video prompt for a 9:16 aspect ratio Instagram Reel.
     """
     try:
-        model = genai.GenerativeModel('gemini-pro')
+        model = genai.GenerativeModel('models/gemini-1.5-pro-latest')
         prompt = (
             "Generate a creative and realistic 10-second food video prompt for a 9:16 aspect ratio Instagram Reel. "
             "The video should be cinematic and have an ASMR style. "
