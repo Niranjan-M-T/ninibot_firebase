@@ -1,3 +1,4 @@
 google-generativeai[video]
+google-generativeai
 requests
-publer-api
+google-cloud-videointelligence
