@@ -1,0 +1,32 @@
+name: Daily Food Video Generation
+
+on:
+  schedule:
+    - cron: "0 0 * * *" # Runs every day at midnight UTC
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Check out repository
+      uses: actions/checkout@v2
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.x'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+
+    - name: Generate Prompt
+      run: python generate_prompt.py
+
+    - name: Create Video
+      run: python create_video_veo.py
+
+    - name: Upload to Instagram
+      run: python upload_instagram.py
