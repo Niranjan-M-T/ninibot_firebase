@@ -1,10 +1,15 @@
+import time
 import os
-from config import VEO_API_KEY
-from google.cloud import videointelligence_v1p3beta1 as videointelligence
+from google import genai
+from google.generativeai import types
+from config import GEMINI_API_KEY
+
+# Configure your API key
+genai.configure(api_key=GEMINI_API_KEY) 
 
 def create_video_from_prompt(prompt_file="reel_prompt.txt", output_file="output/video.mp4"):
     """
-    Generates a video from a prompt using the Veo API.
+    Generates a video from a prompt using the Veo 3.0 Fast Generate Preview model.
     """
     try:
         # Read the prompt from the file
@@ -14,26 +19,34 @@ def create_video_from_prompt(prompt_file="reel_prompt.txt", output_file="output/
         if not prompt:
             print("Error: Prompt file is empty.")
             return
+            
+        client = genai.Client()
 
-        # Configure the Veo API client
-        client = videointelligence.VideoIntelligenceServiceClient.from_service_account_json(VEO_API_KEY)
-
-        # Construct the request
-        request = videointelligence.AnnotateVideoRequest(
-            features=[videointelligence.Feature.TEXT_DETECTION],
-            input_content=prompt.encode("utf-8"),
+        # Generate video with Veo 3
+        operation = client.models.generate_videos(
+            model="veo-3.0-fast-generate-preview", # Use the preview model for Veo 3
+            prompt=prompt,
+            config=types.GenerateVideosConfig(
+                negative_prompt="cartoon, drawing, low quality",
+            ),
         )
 
-        # Make the API call
-        print("Generating video... This may take a few minutes.")
-        operation = client.annotate_video(request=request)
-        result = operation.result(timeout=300)
+        # Poll the operation status until the video is ready
+        while not operation.done:
+            print("Waiting for video generation to complete...")
+            time.sleep(10) # Adjust sleep duration as needed
 
-        # Save the video
+        operation = client.operations.get(operation)
+        generated_video = operation.result.generated_videos[0]
+
+        # Download the generated video file
+        video_file = client.files.get(file=generated_video.video)
         with open(output_file, "wb") as f:
-            f.write(result.annotation_results[0].text_annotations[0].text.encode("utf-8"))
+            f.write(video_file.read())
 
-        print(f"Successfully generated and saved the video to {output_file}")
+        print("Video generation complete!")
+        print(f"Generated video details: {generated_video.video}")
+
 
     except Exception as e:
         print(f"An error occurred: {e}")
