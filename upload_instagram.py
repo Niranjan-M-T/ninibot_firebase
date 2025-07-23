@@ -54,7 +54,7 @@ def upload_to_instagram(video_path="output/video.mp4", description=""):
                         },
                         "accounts": [
                             {
-                                "id": "YOUR_INSTAGRAM_ACCOUNT_ID" # Replace with your Instagram account ID in Publer
+                                "id": "72165006158" # Replace with your Instagram account ID in Publer
                             }
                         ]
                     }
