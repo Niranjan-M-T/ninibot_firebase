@@ -1,11 +1,10 @@
 import time
 import os
-from google import genai
-from google.generativeai import types
+import google.generativeai as genai
 from config import GEMINI_API_KEY
 
 # Configure your API key
-genai.configure(api_key=GEMINI_API_KEY) 
+genai.configure(api_key=GEMINI_API_KEY)
 
 def create_video_from_prompt(prompt_file="reel_prompt.txt", output_file="output/video.mp4"):
     """
@@ -19,34 +18,18 @@ def create_video_from_prompt(prompt_file="reel_prompt.txt", output_file="output/
         if not prompt:
             print("Error: Prompt file is empty.")
             return
-            
-        client = genai.Client()
 
-        # Generate video with Veo 3
-        operation = client.models.generate_videos(
-            model="veo-3.0-fast-generate-preview", # Use the preview model for Veo 3
-            prompt=prompt,
-            config=types.GenerateVideosConfig(
-                negative_prompt="cartoon, drawing, low quality",
-            ),
-        )
+        # Create the model
+        model = genai.GenerativeModel('models/veo-3.0-fast-generate-preview')
 
-        # Poll the operation status until the video is ready
-        while not operation.done:
-            print("Waiting for video generation to complete...")
-            time.sleep(10) # Adjust sleep duration as needed
+        # Generate video
+        video = model.generate_content(prompt)
 
-        operation = client.operations.get(operation)
-        generated_video = operation.result.generated_videos[0]
-
-        # Download the generated video file
-        video_file = client.files.get(file=generated_video.video)
+        # Save the video to a file
         with open(output_file, "wb") as f:
-            f.write(video_file.read())
+            f.write(video.content)
 
         print("Video generation complete!")
-        print(f"Generated video details: {generated_video.video}")
-
 
     except Exception as e:
         print(f"An error occurred: {e}")
