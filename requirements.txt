@@ -1,3 +1,2 @@
-google-generativeai
+google-cloud-aiplatform[video]
 requests
-google-cloud-videointelligence

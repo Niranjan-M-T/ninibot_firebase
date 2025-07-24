@@ -1,11 +1,8 @@
-import time
-import os
-from google import genai
-from google.generativeai import types
-from config import GEMINI_API_KEY
+import vertexai
+from vertexai.preview.generative_models import GenerativeModel
+import vertexai.preview.generative_models as generative_models
+from config import GEMINI_API_KEY, PROJECT_ID
 
-# Configure your API key
-genai.configure(api_key=GEMINI_API_KEY) 
 
 def create_video_from_prompt(prompt_file="reel_prompt.txt", output_file="output/video.mp4"):
     """
@@ -19,34 +16,36 @@ def create_video_from_prompt(prompt_file="reel_prompt.txt", output_file="output/
         if not prompt:
             print("Error: Prompt file is empty.")
             return
-            
-        client = genai.Client()
 
-        # Generate video with Veo 3
-        operation = client.models.generate_videos(
-            model="veo-3.0-fast-generate-preview", # Use the preview model for Veo 3
-            prompt=prompt,
-            config=types.GenerateVideosConfig(
-                negative_prompt="cartoon, drawing, low quality",
-            ),
+        # Initialize Vertex AI
+        vertexai.init(project=PROJECT_ID, location="us-central1")
+
+        # Load the model
+        model = GenerativeModel("veo-3.0-fast-generate-preview")
+
+        # Generate video
+        response = model.generate_content(
+            [prompt],
+            generation_config={
+                "max_output_tokens": 2048,
+                "temperature": 0.4,
+                "top_p": 1,
+                "top_k": 32
+            },
+            safety_settings={
+                generative_models.HarmCategory.HARM_CATEGORY_HATE_SPEECH: generative_models.HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
+                generative_models.HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: generative_models.HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
+                generative_models.HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT: generative_models.HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
+                generative_models.HarmCategory.HARM_CATEGORY_HARASSMENT: generative_models.HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
+            },
+            stream=False,
         )
 
-        # Poll the operation status until the video is ready
-        while not operation.done:
-            print("Waiting for video generation to complete...")
-            time.sleep(10) # Adjust sleep duration as needed
-
-        operation = client.operations.get(operation)
-        generated_video = operation.result.generated_videos[0]
-
-        # Download the generated video file
-        video_file = client.files.get(file=generated_video.video)
+        # Save the video to a file
         with open(output_file, "wb") as f:
-            f.write(video_file.read())
+            f.write(response.content)
 
         print("Video generation complete!")
-        print(f"Generated video details: {generated_video.video}")
-
 
     except Exception as e:
         print(f"An error occurred: {e}")
